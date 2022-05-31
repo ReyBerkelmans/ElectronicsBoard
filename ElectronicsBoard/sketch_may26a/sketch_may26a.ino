@@ -1,6 +1,42 @@
 #include <SPI.h>
 #include <SD.h>
 
+// Traffic Lights - LED Outputs
+#define ledRed A0
+#define ledYellow A1 
+#define ledGreen A2
+
+// DC Motor & Motor Module - L298N
+#include <L298N.h>
+
+// Pin definition
+const unsigned int IN1 = 7;
+const unsigned int IN2 = 8;
+const unsigned int EN = 9;
+
+// Create one motor instance
+L298N motor(EN, IN1, IN2);
+
+// Servo
+#include <Servo.h>
+Servo myservo;
+
+//Potentiometer
+#define pot A3
+
+// Piezo Buzzer
+#define piezoPin 8
+
+// Sonar - HC-SR04
+#define echoPin 6 // attach pin D2 Arduino to pin Echo of HC-SR04
+#define trigPin A4 //attach pin D3 Arduino to pin Trig of HC-SR04
+
+// Line Sensor
+#define lineSensorPin 3
+
+// Crash Sensor / Button
+#define crashSensor 7
+
 // Real Time Clock (RTC)
 #include "RTClib.h"
 RTC_Millis rtc;     // Software Real Time Clock (RTC)
