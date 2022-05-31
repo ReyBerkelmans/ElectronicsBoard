@@ -27,6 +27,8 @@ logEvent("System Initialisation...");
 
 void loop() {
   // put your main code here, to run repeatedly:
+}
+
 void logEvent(String dataToLog) {
   /*
      Log entries to a file on an SD card.
@@ -73,5 +75,4 @@ void logEvent(String dataToLog) {
   Serial.print(rightNow.second(), DEC);
   Serial.print(",");
   Serial.println(dataToLog);
-}
 }
