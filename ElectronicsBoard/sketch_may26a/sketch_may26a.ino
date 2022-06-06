@@ -138,4 +138,46 @@ void logEvent(String dataToLog) {
   Serial.print(rightNow.second(), DEC);
   Serial.print(",");
   Serial.println(dataToLog);
+
+trafficLights();
+motorDC();
+servo();
+potentiometer();
+piezoBuzzer();
+sonar();
+lineSensor();
+button();
+
+}
+
+void trafficLights() {
+
+}
+
+void motorDC() {
+
+}
+
+void servo() {
+
+}
+
+void potentiometer() {
+
+}
+
+void piezoBuzzer() {
+
+}
+
+void sonar() {
+
+}
+
+void lineSensor() {
+
+}
+
+void button() {
+
 }
