@@ -86,6 +86,8 @@ pinMode(crashSensor, INPUT);
   rtc.begin(DateTime(F(__DATE__), F(__TIME__)));
   Serial.println("initialization done.");
 logEvent("System Initialisation...");
+
+
 }
 
 void loop() {
@@ -180,4 +182,50 @@ void lineSensor() {
 
 void button() {
 
+}
+
+void reverseAlarm() {
+digitalWrite(trigPin, LOW);
+delayMicroseconds(2);
+// Sets the trigPin HIGH (ACTIVE) for 10 microseconds
+digitalWrite(trigPin, HIGH);
+delayMicroseconds(10);
+digitalWrite(trigPin, LOW);
+// Reads the echoPin, returns the sound wave travel time in microseconds
+long duration = pulseIn(echoPin, HIGH);
+// Calculating the distance
+int distance = duration * 0.034 / 2; // Speed of sound wave divided by 2 (go and back)
+Serial.print("Distance; ");
+Serial.print(distance);
+Serial.println(" cm");
+if (distance >= 100) {
+  digitalWrite(2, HIGH);
+} else {
+  if (distance >= 50) {
+    digitalWrite(1, HIGH);
+  } else {
+    digitalWrite(0, HIGH); 
+  }
+}
+}
+
+void lineWheels() {
+  int lineSensorValue = digitalRead(lineSensorPin);
+  // Servo position values range from 0-180
+int servoPos = 100;
+myservo.write(servoPos);
+  if (lineSensorValue == 1) {
+    digitalWrite(servoPos, 50);
+  } else {
+    digitalWrite(servoPos, 100);
+  }
+}
+
+void carHorn() {
+  int crashSensorValue = digitalRead(crashSensor);
+  if (crashSensorValue == 1) {
+    digitalWrite(piezoPin, HIGH);
+  } else {
+    digitalWrite(piezoPin, LOW);
+  }
 }
