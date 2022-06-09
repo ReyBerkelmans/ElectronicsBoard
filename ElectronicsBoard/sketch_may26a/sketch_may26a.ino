@@ -3,15 +3,15 @@
 
 // Traffic Lights - LED Outputs
 #define ledRed A0
-#define ledYellow A1 
+#define ledYellow A1
 #define ledGreen A2
 
 // DC Motor & Motor Module - L298N
 #include <L298N.h>
 
 // Pin definition
-const unsigned int IN1 = 7;
-const unsigned int IN2 = 8;
+const unsigned int IN1 = 5;
+const unsigned int IN2 = 6;
 const unsigned int EN = 9;
 
 // Create one motor instance
@@ -25,10 +25,10 @@ Servo myservo;
 #define pot A3
 
 // Piezo Buzzer
-#define piezoPin 8
+#define piezoPin 4
 
 // Sonar - HC-SR04
-#define echoPin 6 // attach pin D2 Arduino to pin Echo of HC-SR04
+#define echoPin 8 // attach pin D2 Arduino to pin Echo of HC-SR04
 #define trigPin A4 //attach pin D3 Arduino to pin Trig of HC-SR04
 
 // Line Sensor
@@ -37,6 +37,9 @@ Servo myservo;
 // Crash Sensor / Button
 #define crashSensor 7
 
+// PIR
+#define PIRSensor 2
+
 // Real Time Clock (RTC)
 #include "RTClib.h"
 RTC_Millis rtc;     // Software Real Time Clock (RTC)
@@ -44,54 +47,58 @@ DateTime rightNow;  // used to store the current time.
 
 void setup() {
   // put your setup code here, to run once:
-Serial.begin(9600);           // Open serial communications and wait for port to open:
+  Serial.begin(9600);           // Open serial communications and wait for port to open:
   while (!Serial) {
     delay(1);                   // wait for serial port to connect. Needed for native USB port only
+  }
+  // Traffic Lights - LED Outputs
+  pinMode(ledRed, OUTPUT);
+  pinMode(ledYellow, OUTPUT);
+  pinMode(ledGreen, OUTPUT);
 
- // Traffic Lights - LED Outputs
-pinMode(ledRed, OUTPUT);
-pinMode(ledYellow, OUTPUT);
-pinMode(ledGreen, OUTPUT);
+  // DC Motor & Motor Module - L298N
+  motor.setSpeed(70);
 
-// DC Motor & Motor Module - L298N
-motor.setSpeed(70);
-
-// Servo
+  // Servo
   myservo.attach(9);  // attaches the servo on pin 9 to the servo object
 
   //Potentiometer
-pinMode(pot, INPUT);
+  pinMode(pot, INPUT);
 
-// Piezo Buzzer
-pinMode(piezoPin,OUTPUT);
+  // Piezo Buzzer
+  pinMode(piezoPin, OUTPUT);
 
-// Sonar - HC-SR04
-pinMode(trigPin, OUTPUT); // Sets the trigPin as an OUTPUT
-pinMode(echoPin, INPUT); // Sets the echoPin as an INPUT
+  // Sonar - HC-SR04
+  pinMode(trigPin, OUTPUT); // Sets the trigPin as an OUTPUT
+  pinMode(echoPin, INPUT); // Sets the echoPin as an INPUT
 
-// Line Sensor
-pinMode(lineSensorPin, OUTPUT);
+  // Line Sensor
+  pinMode(lineSensorPin, INPUT);
 
-// Crash Sensor / Button
-pinMode(crashSensor, INPUT);
-  }
+  // Crash Sensor / Button
+  pinMode(crashSensor, INPUT);
 
-// SD Card initialisation
+
+  // SD Card initialisation
   Serial.print("Initializing SD card...");
   if (!SD.begin(10)) {
     Serial.println("initialization failed!");
     while (1);
   }
-// Real Time Clock (RTC)
+  // Real Time Clock (RTC)
   rtc.begin(DateTime(F(__DATE__), F(__TIME__)));
   Serial.println("initialization done.");
-logEvent("System Initialisation...");
+  logEvent("System Initialisation...");
 
 
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  //engineOn(); // Commented out because of potentially dodgy hardware
+  carHorn();
+  reverseAlarm();
+  //lineWheels();
+  delay(100);
 }
 
 void logEvent(String dataToLog) {
@@ -141,14 +148,14 @@ void logEvent(String dataToLog) {
   Serial.print(",");
   Serial.println(dataToLog);
 
-trafficLights();
-motorDC();
-servo();
-potentiometer();
-piezoBuzzer();
-sonar();
-lineSensor();
-button();
+  trafficLights();
+  motorDC();
+  servo();
+  potentiometer();
+  piezoBuzzer();
+  sonar();
+  lineSensor();
+  button();
 
 }
 
@@ -185,47 +192,65 @@ void button() {
 }
 
 void reverseAlarm() {
-digitalWrite(trigPin, LOW);
-delayMicroseconds(2);
-// Sets the trigPin HIGH (ACTIVE) for 10 microseconds
-digitalWrite(trigPin, HIGH);
-delayMicroseconds(10);
-digitalWrite(trigPin, LOW);
-// Reads the echoPin, returns the sound wave travel time in microseconds
-long duration = pulseIn(echoPin, HIGH);
-// Calculating the distance
-int distance = duration * 0.034 / 2; // Speed of sound wave divided by 2 (go and back)
-Serial.print("Distance; ");
-Serial.print(distance);
-Serial.println(" cm");
-if (distance >= 100) {
-  digitalWrite(2, HIGH);
-} else {
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  // Sets the trigPin HIGH (ACTIVE) for 10 microseconds
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  // Reads the echoPin, returns the sound wave travel time in microseconds
+  long duration = pulseIn(echoPin, HIGH);
+  // Calculating the distance
+  int distance = duration * 0.034 / 2; // Speed of sound wave divided by 2 (go and back)
+  Serial.print("Distance; ");
+  Serial.print(distance);
+  Serial.println(" cm");
   if (distance >= 50) {
-    digitalWrite(1, HIGH);
+    digitalWrite(ledGreen, HIGH);
+    digitalWrite(ledYellow, LOW);
+    digitalWrite(ledRed, LOW);
   } else {
-    digitalWrite(0, HIGH); 
+    if (distance >= 30) {
+      digitalWrite(ledYellow, HIGH);
+      digitalWrite(ledGreen, LOW);
+    digitalWrite(ledRed, LOW);
+    } else {
+      digitalWrite(ledRed, HIGH);
+      digitalWrite(ledYellow, LOW);
+    digitalWrite(ledGreen, LOW);
+    }
   }
-}
 }
 
 void lineWheels() {
   int lineSensorValue = digitalRead(lineSensorPin);
   // Servo position values range from 0-180
-int servoPos = 100;
-myservo.write(servoPos);
+  int servoPos = 100;
+  myservo.write(servoPos);
   if (lineSensorValue == 1) {
-    digitalWrite(servoPos, 50);
+    digitalWrite(servoPos, 180);
   } else {
-    digitalWrite(servoPos, 100);
+    digitalWrite(servoPos, 0);
   }
 }
 
 void carHorn() {
   int crashSensorValue = digitalRead(crashSensor);
-  if (crashSensorValue == 1) {
+  if (crashSensorValue == LOW) {
     digitalWrite(piezoPin, HIGH);
   } else {
     digitalWrite(piezoPin, LOW);
+  }
+}
+
+void engineOn() {
+  // Code not working - Something weird with PIR
+  int PIRSensorValue = digitalRead(PIRSensor);
+  Serial.println(PIRSensorValue);
+  // Servo position values range from 0-180
+  if (PIRSensorValue == 1) {
+    digitalWrite(ledRed, HIGH);
+  } else {
+    digitalWrite(ledRed, LOW);
   }
 }
