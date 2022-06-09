@@ -97,7 +97,7 @@ void loop() {
   //engineOn(); // Commented out because of potentially dodgy hardware
   carHorn();
   reverseAlarm();
-  //lineWheels();
+  lineWheels();
   delay(100);
 }
 
@@ -226,11 +226,11 @@ void lineWheels() {
   int lineSensorValue = digitalRead(lineSensorPin);
   // Servo position values range from 0-180
   int servoPos = 100;
-  myservo.write(servoPos);
   if (lineSensorValue == 1) {
-    digitalWrite(servoPos, 180);
+    Serial.println("lineSensor");
+    myservo.write(servoPos);
   } else {
-    digitalWrite(servoPos, 0);
+    myservo.write(0);
   }
 }
 
