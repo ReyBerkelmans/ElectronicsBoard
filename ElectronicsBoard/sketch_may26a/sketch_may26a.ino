@@ -40,6 +40,9 @@ Servo myservo;
 // PIR
 #define PIRSensor 2
 
+// Moisture Sensor
+#define moisturePin A5
+
 // Real Time Clock (RTC)
 #include "RTClib.h"
 RTC_Millis rtc;     // Software Real Time Clock (RTC)
@@ -51,13 +54,27 @@ void setup() {
   while (!Serial) {
     delay(1);                   // wait for serial port to connect. Needed for native USB port only
   }
+
+ 
+  // SD Card initialisation
+  Serial.print("Initializing SD card...");
+  if (!SD.begin(10)) {
+    Serial.println("initialization failed!");
+    while (1);
+  }
+  
+  // Real Time Clock (RTC)
+  rtc.begin(DateTime(F(__DATE__), F(__TIME__)));
+  Serial.println("initialization done.");
+  //logEvent("System Initialisation...");
+
   // Traffic Lights - LED Outputs
   pinMode(ledRed, OUTPUT);
   pinMode(ledYellow, OUTPUT);
   pinMode(ledGreen, OUTPUT);
 
   // DC Motor & Motor Module - L298N
-  motor.setSpeed(70);
+  motor.setSpeed(255);
 
   // Servo
   myservo.attach(9);  // attaches the servo on pin 9 to the servo object
@@ -78,26 +95,17 @@ void setup() {
   // Crash Sensor / Button
   pinMode(crashSensor, INPUT);
 
-
-  // SD Card initialisation
-  Serial.print("Initializing SD card...");
-  if (!SD.begin(10)) {
-    Serial.println("initialization failed!");
-    while (1);
-  }
-  // Real Time Clock (RTC)
-  rtc.begin(DateTime(F(__DATE__), F(__TIME__)));
-  Serial.println("initialization done.");
-  logEvent("System Initialisation...");
-
+  // Moisture Sensor
+pinMode(moisturePin, INPUT);
 
 }
 
 void loop() {
-  //engineOn(); // Commented out because of potentially dodgy hardware
+  engineOn(); // Commented out because of potentially dodgy hardware
   carHorn();
   reverseAlarm();
   lineWheels();
+  carLights();
   delay(100);
 }
 
@@ -202,9 +210,9 @@ void reverseAlarm() {
   long duration = pulseIn(echoPin, HIGH);
   // Calculating the distance
   int distance = duration * 0.034 / 2; // Speed of sound wave divided by 2 (go and back)
-  Serial.print("Distance; ");
-  Serial.print(distance);
-  Serial.println(" cm");
+  //Serial.print("Distance; ");
+  //Serial.print(distance);
+  //Serial.println(" cm");
   if (distance >= 50) {
     digitalWrite(ledGreen, HIGH);
     digitalWrite(ledYellow, LOW);
@@ -227,7 +235,7 @@ void lineWheels() {
   // Servo position values range from 0-180
   int servoPos = 100;
   if (lineSensorValue == 1) {
-    Serial.println("lineSensor");
+    //Serial.println("lineSensor");
     myservo.write(servoPos);
   } else {
     myservo.write(0);
@@ -244,13 +252,26 @@ void carHorn() {
 }
 
 void engineOn() {
-  // Code not working - Something weird with PIR
   int PIRSensorValue = digitalRead(PIRSensor);
-  Serial.println(PIRSensorValue);
+  //Serial.println(PIRSensorValue);
+  int potValue = analogRead(pot);
+  //Serial.println(potValue);
+  int motorSpeed = map(potValue, 0, 1023, 0, 255);
   // Servo position values range from 0-180
-  if (PIRSensorValue == 1) {
-    digitalWrite(ledRed, HIGH);
+  if (potValue > 512) {
+    Serial.println("here");
+    motor.forward();
   } else {
-    digitalWrite(ledRed, LOW);
+    motor.stop();
+  }
+}
+
+void carLights() {
+  int moistureValue = analogRead(moisturePin);
+  Serial.println(moistureValue);
+  if (moistureValue > 100) {
+    digitalWrite(2, HIGH);
+  } else {
+    digitalWrite(2, LOW);
   }
 }
