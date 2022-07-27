@@ -268,7 +268,7 @@ void engineOn() {
 
 void carLights() {
   int moistureValue = analogRead(moisturePin);
-  Serial.println(moistureValue);
+  //Serial.println(moistureValue);
   if (moistureValue > 100) {
     digitalWrite(2, HIGH);
   } else {
